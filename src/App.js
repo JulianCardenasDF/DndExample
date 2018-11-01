@@ -20,27 +20,64 @@ class App extends Component {
 
     if(!destination || (destination.droppableId === source.droppableId && destination.index === source.index))   return;
     
-
-    const column = this.state.columns[source.droppableId];
-    const newTaskIds = Array.from(column.taskIds);
-    newTaskIds.splice(source.index,1);
-    newTaskIds.splice(destination.index, 0, draggableId);
+    const startColumn = this.state.columns[source.droppableId]
+    const finishColumn = this.state.columns[destination.droppableId]
+    if(startColumn == finishColumn){
+      this.MovePosition(startColumn,source.index,destination.index,draggableId);
+    } else{
+      this.MoveColumn(startColumn,finishColumn,source,destination,draggableId);
+    }
    
-    const newColumn = {
-      ...column,
-      taskIds: newTaskIds
+  };
+
+  MoveColumn = (startTasks,finishTasks,source,destination,draggableId) =>{
+    const startTaskIds= Array.from(startTasks.taskIds);
+    startTaskIds.splice(source.index,1);
+    const newStart = {
+      ...startTasks,
+      taskIds: startTaskIds
     };
+    const finishTasksIds= Array.from(finishTasks.taskIds);
+    finishTasksIds.splice(destination.index,0,draggableId);
+    const newFinish = {
+      ...finishTasks,
+      taskIds: finishTasksIds
+    }
 
     const newState = {
       ...this.state,
-      columns: {
-        ...this.state.columns,     
-         [newColumn.id]: newColumn,
-      },
-    };
-
+      columns:{
+        ...this.state.columns,
+        [newStart.id] :newStart,
+        [newFinish.id]:newFinish,
+      }
+    }
+    debugger;
     this.setState(newState);
+    
+  }
+
+  MovePosition = (column,source,destination,draggableId) => {
+  const newTaskIds = Array.from(column.taskIds);
+  newTaskIds.splice(source,1);
+  newTaskIds.splice(destination, 0, draggableId);
+ 
+  const newColumn = {
+    ...column,
+    taskIds: newTaskIds
   };
+
+  const newState = {
+    ...this.state,
+    columns: {
+      ...this.state.columns,     
+       [newColumn.id]: newColumn,
+    },
+  };
+
+  this.setState(newState);
+}
+
 
   onDragStart = () =>{
 document.body.style.color ='orange';
@@ -55,8 +92,8 @@ document.body.style.transition = 'background-color 0.2s ease';
     
 
    renderDragContext  = () => {
-let jsx = [];
-jsx.push(<div>
+return(
+<div>
     <DragDropContext
      onDragEnd ={this.onDragEnd}
      onDragUpdate={this.onDragUpdate}
@@ -71,7 +108,7 @@ jsx.push(<div>
 
      </div>
     );
-return jsx;
+
   }
  
  
