@@ -67,7 +67,6 @@ constructor(){
     document.body.style.backgroundColor="inherit";
     const {destination , source , draggableId , type} = result;
 
-    debugger;
     if(!destination || (destination.droppableId === source.droppableId && destination.index === source.index))   return;
     
     if(type === "CATEGORY"){
@@ -75,8 +74,6 @@ constructor(){
     }else{
       this.MoveLinks(destination , source , draggableId)
     }
-
-  
    
   };
 
@@ -87,7 +84,7 @@ constructor(){
     newCategoriesOrder.splice(destination.index,0,movedCategory);
     
     let newState =this.state;
-    newState.categories = newCategoriesOrder;
+    newState.categories = this.ResetPositions(newCategoriesOrder);
 
     this.setState(newState);
   }
