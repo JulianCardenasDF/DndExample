@@ -79,7 +79,7 @@ constructor(){
 
   MoveCategories= (destination , source , draggableId) =>{
     const newCategoriesOrder = Array.from(this.state.categories);
-    const movedCategory = this.state.categories.find(c => c.title == draggableId)
+    const movedCategory = this.state.categories.find(c => c.title === draggableId)
     newCategoriesOrder.splice(source.index,1);
     newCategoriesOrder.splice(destination.index,0,movedCategory);
     
@@ -90,8 +90,8 @@ constructor(){
   }
 
   MoveLinks = (destination , source , draggableId) =>{
-    const startCategory = this.state.categories.find(c => c.position == source.droppableId);
-    const finishCategory = this.state.categories.find(c => c.position == destination.droppableId)
+    const startCategory = this.state.categories.find(c => c.title === source.droppableId);
+    const finishCategory = this.state.categories.find(c => c.title === destination.droppableId)
     if(startCategory.id === finishCategory.id){
       this.MovePosition(startCategory,source.index,destination.index,draggableId);
     } else{
@@ -103,7 +103,7 @@ constructor(){
   ResetPositions = (links) =>
   {
    return links.map((l,index) => {
-      l.position =index
+      l.position = index
       return l;
     })
   }
@@ -136,7 +136,7 @@ constructor(){
   MovePosition = (category,source,destination,draggableId) => {
 
   const links = Array.from(category.links);
-  const  movedLink =  links.find(l => l.id == draggableId);
+  const  movedLink =  links.find(l => l.id.toString() === draggableId);
   links.splice(source,1);
   links.splice(destination, 0, movedLink);
 
@@ -146,8 +146,6 @@ constructor(){
   };
 
   let newState = this.state;
- // let indexUpdatedCategory = state.categories.map(function (element) {return element.id;}).indexOf(category.id);
-  let sortedCategory = newState.categories.find(c=> category.title ==c.title);
   newState.categories[category.position] = updatedCategory;
 
   this.setState(newState);
@@ -155,7 +153,7 @@ constructor(){
 
   RenderCategories = () =>{
     return this.state.categories.map( currentCategory => {
-      const category = this.state.categories.find(c => c.position == currentCategory.position);
+      const category = this.state.categories.find(c => c.position === currentCategory.position);
       return <Column key={category.id} category={category} links={category.links}></Column> 
       });
   }
