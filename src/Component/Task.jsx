@@ -24,7 +24,7 @@ export default class Task extends React.Component{
         
         return(
         
-        <Draggable draggableId={""+this.props.links.id} index={this.props.index}>
+        <Draggable draggableId={""+this.props.links.id} index={this.props.index} type="NNNJJJLLLOOO">
 
         {(provided,snapshot) =>(
         

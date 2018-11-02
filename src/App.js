@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import Column from "./Component/Column"
-import {DragDropContext} from 'react-beautiful-dnd';
+import {DragDropContext , Droppable} from 'react-beautiful-dnd';
 import styled from 'styled-components';
 const Container = styled.div`
 display:
@@ -14,8 +14,7 @@ class App extends Component {
 constructor(){
   super();
  this.state={
-    categories:[],
-    categoriesOrder:[]
+    categories:[]
   };
    
  this.SetIntialState();
@@ -23,11 +22,14 @@ constructor(){
   SetIntialState  =  () =>{
     let currentState = this.state;
     currentState.categories=this.GenerateCategories(2);
-    currentState.categoriesOrder=this.GetCategoriesTitle(currentState.categories);
+  
+
     this.setState(currentState);
  }
 
-  GenerateId = () => Math.floor(Math.random() *10000000);
+ GetCategoriesOrder = (categories) => categories.map(c => c.id);
+ 
+ GenerateId = () => Math.floor(Math.random() *10000000);
 
   GenerateLinks = (int) =>
   {
@@ -52,7 +54,7 @@ constructor(){
              id: this.GenerateId()+i, 
              title: "Category " +i,
              position:i,
-             links: this.GenerateLinks(7)
+             links: this.GenerateLinks(3)
          });
      }
      return categories;
@@ -63,19 +65,43 @@ constructor(){
   onDragEnd = (result) => {
     document.body.style.color = "inherit";
     document.body.style.backgroundColor="inherit";
-    const {destination , source , draggableId} = result;
+    const {destination , source , draggableId , type} = result;
 
+    debugger;
     if(!destination || (destination.droppableId === source.droppableId && destination.index === source.index))   return;
     
-    const startCategory = this.state.categories.find(c => c.id == source.droppableId);
-    const finishCategory = this.state.categories.find(c => c.id == destination.droppableId)
-    if(startCategory === finishCategory){
+    if(type === "CATEGORY"){
+     this.MoveCategories(destination , source , draggableId)
+    }else{
+      this.MoveLinks(destination , source , draggableId)
+    }
+
+  
+   
+  };
+
+  MoveCategories= (destination , source , draggableId) =>{
+    const newCategoriesOrder = Array.from(this.state.categories);
+    const movedCategory = this.state.categories.find(c => c.title == draggableId)
+    newCategoriesOrder.splice(source.index,1);
+    newCategoriesOrder.splice(destination.index,0,movedCategory);
+    
+    let newState =this.state;
+    newState.categories = newCategoriesOrder;
+
+    this.setState(newState);
+  }
+
+  MoveLinks = (destination , source , draggableId) =>{
+    const startCategory = this.state.categories.find(c => c.position == source.droppableId);
+    const finishCategory = this.state.categories.find(c => c.position == destination.droppableId)
+    if(startCategory.id === finishCategory.id){
       this.MovePosition(startCategory,source.index,destination.index,draggableId);
     } else{
       this.MoveCategory(startCategory,finishCategory,source,destination,draggableId);
     }
-   
-  };
+  }
+
 
   ResetPositions = (links) =>
   {
@@ -130,18 +156,30 @@ constructor(){
   this.setState(newState);
 }
 
+  RenderCategories = () =>{
+    return this.state.categories.map( currentCategory => {
+      const category = this.state.categories.find(c => c.position == currentCategory.position);
+      return <Column key={category.id} category={category} links={category.links}></Column> 
+      });
+  }
 
  renderDragContext  = () => {
   
-  return(<div>
-    <DragDropContext onDragEnd ={this.onDragEnd}>
-      <Container>
-       {this.state.categoriesOrder.map(categoryName => {
-       const category = this.state.categories.find(c => c.title == categoryName);
-       return <Column key={category.id} category={category} links={category.links}></Column> })}
-         </Container>
+  return(
+    <DragDropContext onDragEnd ={this.onDragEnd}
+                      onDragStart={this.start}>
+      <Droppable droppableId="all-categories" direction="vertical" type="CATEGORY">
+       
+        {(provided) => (
+          <Container {...provided.droppableProps} innerRef={provided.innerRef} ref={provided.innerRef}>
+            {this.RenderCategories()}
+            {provided.placeholder}
+          </Container>
+        )}
+        
+       </Droppable>
      </DragDropContext>
-     </div>);
+     );
   }
  
   render() {
