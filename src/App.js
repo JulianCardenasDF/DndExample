@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
-import initialData from "./initial-data";
 import Column from "./Component/Column"
 import {DragDropContext} from 'react-beautiful-dnd';
 import styled from 'styled-components';
@@ -11,8 +9,57 @@ display:
 
 
 class App extends Component {
-  state = initialData;
-  
+
+
+constructor(){
+  super();
+ this.state={
+    categories:[],
+    categoriesOrder:[]
+  };
+   
+ this.SetIntialState();
+}
+  SetIntialState  =  () =>{
+    let currentState = this.state;
+    currentState.categories=this.GenerateCategories(2);
+    currentState.categoriesOrder=this.GetCategoriesTitle(currentState.categories);
+    this.setState(currentState);
+ }
+
+  GenerateId = () => Math.floor(Math.random() *10000000);
+
+  GenerateLinks = (int) =>
+  {
+      let links =[];
+     for(var i=0;i<int ; i++){
+         links.push({
+             id: this.GenerateId()+i, 
+             title: "Link "+i,
+             url: "http://www.google.com",
+             urlText: ""+i,
+             position:i
+         });
+     }
+     return links;
+  }
+ 
+  GenerateCategories = (int) =>
+  {
+      let categories =[];
+     for(var i=0;i<int ; i++){
+         categories.push({
+             id: this.GenerateId()+i, 
+             title: "Category " +i,
+             position:i,
+             links: this.GenerateLinks(7)
+         });
+     }
+     return categories;
+  }
+
+  GetCategoriesTitle = (categories) => categories.map(c => c.title).sort((current,next)=> current.position-next.position);
+    
   onDragEnd = (result) => {
     document.body.style.color = "inherit";
     document.body.style.backgroundColor="inherit";
@@ -20,109 +67,87 @@ class App extends Component {
 
     if(!destination || (destination.droppableId === source.droppableId && destination.index === source.index))   return;
     
-    const startColumn = this.state.columns[source.droppableId]
-    const finishColumn = this.state.columns[destination.droppableId]
-    if(startColumn == finishColumn){
-      this.MovePosition(startColumn,source.index,destination.index,draggableId);
+    const startCategory = this.state.categories.find(c => c.id == source.droppableId);
+    const finishCategory = this.state.categories.find(c => c.id == destination.droppableId)
+    if(startCategory === finishCategory){
+      this.MovePosition(startCategory,source.index,destination.index,draggableId);
     } else{
-      this.MoveColumn(startColumn,finishColumn,source,destination,draggableId);
+      this.MoveCategory(startCategory,finishCategory,source,destination,draggableId);
     }
    
   };
 
-  MoveColumn = (startTasks,finishTasks,source,destination,draggableId) =>{
-    const startTaskIds= Array.from(startTasks.taskIds);
-    startTaskIds.splice(source.index,1);
-    const newStart = {
-      ...startTasks,
-      taskIds: startTaskIds
-    };
-    const finishTasksIds= Array.from(finishTasks.taskIds);
-    finishTasksIds.splice(destination.index,0,draggableId);
-    const newFinish = {
-      ...finishTasks,
-      taskIds: finishTasksIds
-    }
-
-    const newState = {
-      ...this.state,
-      columns:{
-        ...this.state.columns,
-        [newStart.id] :newStart,
-        [newFinish.id]:newFinish,
-      }
-    }
-    debugger;
-    this.setState(newState);
-    
+  ResetPositions = (links) =>
+  {
+   return links.map((l,index) => {
+      l.position =index
+      return l;
+    })
   }
 
-  MovePosition = (column,source,destination,draggableId) => {
-  const newTaskIds = Array.from(column.taskIds);
-  newTaskIds.splice(source,1);
-  newTaskIds.splice(destination, 0, draggableId);
- 
-  const newColumn = {
-    ...column,
-    taskIds: newTaskIds
+  MoveCategory = (startCategory,finishCategory,source,destination,draggableId) =>{
+    const startLinks= Array.from(startCategory.links);
+    let movedLink = startLinks[source.index];
+
+    startLinks.splice(source.index,1);
+    const newStartLinks = {
+      ...startCategory,
+      links: startLinks
+    };
+
+     let finishLinks= Array.from(finishCategory.links);
+     finishLinks.splice(destination.index,0,movedLink);
+     
+     const newFinishLinks = {
+       ...finishCategory,
+       links: this.ResetPositions(finishLinks)
+     }
+
+     let newState = this.state;
+     newState.categories[startCategory.position] = newStartLinks;
+     newState.categories[finishCategory.position] = newFinishLinks;
+  
+     this.setState(newState);
+    
+  }
+  MovePosition = (category,source,destination,draggableId) => {
+
+  const links = Array.from(category.links);
+  const  movedLink =  links.find(l => l.id == draggableId);
+  links.splice(source,1);
+  links.splice(destination, 0, movedLink);
+
+  const updatedCategory = {
+    ...category,
+    links: this.ResetPositions(links)
   };
 
-  const newState = {
-    ...this.state,
-    columns: {
-      ...this.state.columns,     
-       [newColumn.id]: newColumn,
-    },
-  };
+  let newState = this.state;
+ // let indexUpdatedCategory = state.categories.map(function (element) {return element.id;}).indexOf(category.id);
+  let sortedCategory = newState.categories.find(c=> category.title ==c.title);
+  newState.categories[category.position] = updatedCategory;
 
   this.setState(newState);
 }
 
 
-  onDragStart = () =>{
-document.body.style.color ='orange';
-document.body.style.transition = 'background-color 0.2s ease';
-  }
-
-  onDragUpdate = (update) =>{
-    const {destination} = update;
-    const opacity = destination ? destination.index / Object.keys(this.state.tasks).length : 0;
-    document.body.style.backgroundColor = `rgba( 153, 141, 217, ${opacity})`;
-  }
-    
-
-   renderDragContext  = () => {
-return(
-<div>
-    <DragDropContext
-     onDragEnd ={this.onDragEnd}
-     onDragUpdate={this.onDragUpdate}
-     onDragStart={this.onDragStart}>
+ renderDragContext  = () => {
+  
+  return(<div>
+    <DragDropContext onDragEnd ={this.onDragEnd}>
       <Container>
-       {this.state.columnOrder.map(columnId => {
-       const column = this.state.columns[columnId];
-       const tasks = column.taskIds.map(taskId => this.state.tasks[taskId]);
-       return <Column key={column.id} column={column} tasks={tasks}></Column> })}
+       {this.state.categoriesOrder.map(categoryName => {
+       const category = this.state.categories.find(c => c.title == categoryName);
+       return <Column key={category.id} category={category} links={category.links}></Column> })}
          </Container>
      </DragDropContext>
-
-     </div>
-    );
-
+     </div>);
   }
  
- 
   render() {
-
-
-    return (<div>
-{this.renderDragContext()}
-
-    </div>
-   
-
-   
-    );
+     return (<div>
+            {this.renderDragContext()}
+            </div>);
   }
   
 }

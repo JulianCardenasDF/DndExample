@@ -16,7 +16,7 @@ const Title = styled.h3`
 const TaskList = styled.div`
 padding: 8px;
 transition: background-color 0.2s ease;
-background-color: ${props => (props.isDraggingOver ? "skyblue" : "red")};
+background-color: ${props => (props.isDraggingOver ? "skyblue" : "gray")};
 flex-grow: 1;
   `;
 
@@ -26,13 +26,13 @@ export default class Column extends React.Component{
         return (
       
             <Container>
-              <Title>{this.props.column.title}</Title>
-              <Droppable droppableId={this.props.column.id}   >
+              <Title>{this.props.category.title}</Title>
+              <Droppable droppableId={""+this.props.category.id}   >
               {
                   (provided,snapshot)=>(
                     <TaskList innerRef={provided.innerRef} {...provided.droppableProps}   ref={provided.innerRef} isDraggingOver={snapshot.isDraggingOver}>
-                    {this.props.tasks.map((task, index) => (
-                      <Task key={task.id} task={task} index={index} />
+                    {this.props.links.map((link, index) => (
+                      <Task key={link.id} links={link} index={index} />
                     ))}
                     {provided.placeholder}
                   </TaskList>)
